@@ -1,0 +1,431 @@
+/***===================================***/
+===== OOP - Classes and Objects Notes =====
+/***===================================***/
+
+
+
+/***====================***/
+===== Copy Constructor =====
+/***====================***/
+
+    - When objects are copied, C++ must create a new object from an existing object
+
+    - When is a copy of an object made?
+        - passing object by value as a parameter
+        - returning an object from a function by value
+        - constructing one object based on another of the same class
+
+    - C++ must have a way of accomplishing this so it provides a compiler-defined copy constructor if you don't
+
+
+
+-----------------------
+- Pass object by-value:
+-----------------------
+
+    PLayer hero{"Hero", 100, 20};
+
+    void displayPlayer(Player p) {
+        // p is a COPY of hero in this example
+        // use p
+        // Destructor for p will be called
+    }
+
+    displayPlayer(hero);
+
+
+
+-------------------------
+- Return object by-value:
+-------------------------
+
+    Player enemy;
+
+    Player createSuperEnemy() {
+        Player superEnemy{"Super Enemy", 1000, 1000};
+        return superEnemy; // A COPY of superEnemy is returned
+    }
+
+    enemy = createSuperEnemy();
+
+
+
+----------------------------------------
+- Construct One Object Based on Another:
+----------------------------------------
+
+    Player hero{"Hero", 100, 100};
+
+    Player anotherHero{hero}; // A COPY of hero is made
+
+
+
+-------------------
+- Copy Constructor:
+-------------------
+
+    - If you don't provide your own way of copying objects by value then the compiler
+      provides a default way of copying objects
+
+    - Copies the values of each data member to the new object
+        - default memberwise copy
+
+    - Perfectly fine in many cases
+
+    - Beware if you have a pointer data member
+        - Pointer will be copied
+        - Not what is is pointing to
+        - Shallow vs. Deep Copy
+
+
+
+----------------------------------
+- Copy Constructor Best Practices:
+----------------------------------
+
+    - Provide a copy constructor when your class has raw pointers
+    - Provide the copy constructor with a const reference parameter
+    - Use STL classes as they already provide copy constructors
+    - Avoid using raw pointer data members if possible - Use Smart Pointers
+
+
+
+---------------------------------
+- Declaring the Copy Constructor:
+---------------------------------
+
+    Type::Type(const Type& source);
+
+    Player::Player(const Player& source);
+
+    Account::Account(const Account& source);
+
+
+
+------------------------------------
+- Implementing the Copy Constructor:
+------------------------------------
+
+    Player::Player(const Player& source)
+        : name{source.name},
+          health{source.health},
+          xp{source.xp} {
+    }
+
+    Account::Account(const Account& source)
+        : name{source.name},
+          balance{source.balance} {
+    }
+
+
+
+/***============================================***/
+===== Shallow vs. Deep Copy - Copy Constructor =====
+/***============================================***/
+
+    - Consider a class that contains a pointer as a data member
+    - Constructor allocates storage dynamically and initializes the pointer
+    - Destructor releases the memory allocated by the constructor
+    - What happens in a default copy constructor?
+
+
+---------------------------
+- Default Copy Constructor:
+---------------------------
+
+    - memberwise copy
+    - Each data member is copied from the source object
+    - The pointer is copied NOT what it points to (shallow copy)
+
+    - PROBLEM: when we release the storage in the destructor, the other object
+      still refers to the released storage
+
+
+----------
+- Shallow:
+----------
+
+    class Shallow {
+    private:
+        int* data;
+
+    public:
+        Shallow(int d);                     // Constructor
+        Shallow(const Shallow& source);     // Copy Constructor
+        ~Shallow();                         // Destructor
+    };
+
+
+    Shallow::Shallow(int d) {
+        data = new int;                     // allocate storage
+        *data = d;
+    }
+
+    Shallow::~Shallow() {
+        delete data;                        // free storage
+    }
+
+    Shallow::Shallow(const Shallow& source)
+        : data{source.data} {
+    }
+
+
+    - Shallow Copy - only the pointer is copied - not what is it pointing to!
+    - PROBLEM: source and the newly created object BOTH point to the SAME data area!
+
+
+- Sample main function using code above - will likely crash
+
+    int main() {
+        Shallow obj1{100};
+        displayShallow(obj1);
+        // obj's data has been released
+
+        obj1.setDataValue(1000);
+        Shallow obj2{obj1};
+    }
+
+
+---------------------------------
+- User-Provided Copy Constructor:
+---------------------------------
+
+    - Create a copy of the pointed-to data
+    - Each copy will have a pointer to unique storage in the heap
+    - Deep copy when you have a raw pointer as a class member
+
+
+
+-------
+- Deep:
+-------
+
+    class Deep {
+    private:
+        int* data;
+
+    public:
+        Deep(int d);                // Constructor
+        Deep(const Deep& source);   // Copy Constructor
+        ~Deep();                    // Destructor
+    };
+
+
+    Deep::Deep(int d) {
+        data = new int;
+        *data = d;
+    }
+
+    Deep:~Deep() {
+        delete data;                // free storage
+    }
+
+    Deep::Deep(const Deep& source) {
+        data = new int;             // allocate storage
+        *data = *source.data;
+    }
+
+
+-------------------------------------------------
+- Deep Copy Constructor - Delegating Constructor:
+-------------------------------------------------
+
+    Deep::Deep(const Deep& source)
+        : Deep{*source.data} {
+    }
+
+    - Delegate to Deep(int) and pass in the int (*source.data) source is pointing to
+
+
+    void displayDeep(Deep s) {
+        std::cout << s.getDataValue() << std::endl;
+    }
+
+    - When s goes out of scope, the destructor is called and releases data.
+    - No Problem: since the storage being released is unique to s.
+
+
+
+/***====================***/
+===== Move Constructor =====
+/***====================***/
+
+    - Sometimes when we execute code, the compiler creates unnamed temporary values
+
+        int total{0};
+        total = 100 + 200;
+
+        - 100 + 200 is evaluated and 300 is stored in an unnamed temp value
+        - The 300 is then stored in the total variable
+        - Then the temp value is discarded
+
+    - The same happens with objects as well
+
+
+When is it useful?
+    - Sometimes copy constructors are called too many times automatically due to the copy
+      semantics of C++
+
+    - Copy constructors doing deep copying can have a significant performance bottleneck
+
+    - C++11 introduced move semantics and the move constructor
+    - Move constructor moves an object rather than copy it
+
+    - Optional but recommended when you have a raw pointer
+
+    - Copy elision - C++ may optimize copying away completely (RVO - Return Value Optimization)
+
+
+
+---------------------
+- r-value References:
+---------------------
+
+    - Used in move semantics and perfect forwarding
+    - Move semantics is all about r-value references
+    - Used by move constructor and move assignment operator to efficiently move an object
+      rather then copy it
+    - r-value reference operator (&&)
+
+- Example:
+    int x{100};
+
+    int& lRef = x;      // l-value reference
+    lRef = 10;          // change x to 10
+
+    int&& rRef = 200;   // r-value reference
+    rRef = 300;         // change rRef to 300
+
+    int&& xRef = x;     // Compiler error!
+
+
+
+-------------------------------
+- l-value Reference Parameters:
+-------------------------------
+
+    int x{100};             // x is an l-value
+
+    void func(int& num);    // A
+
+    func(x);                // Calls A - x is an l-value
+    func(200);              // ERROR - 200 is an r-value
+
+    ERROR - Cannot bind non-const lvalue reference of type 'int&' to an rvalue of type 'int'
+
+
+-------------------------------
+- r-value Reference Parameters:
+-------------------------------
+
+    int x{100};             // x is an l-value
+
+    void func(int&& num);   // B
+
+    func(200);              // Calls B - 200 is an r-value
+    func(x);                // ERROR - x is an l-value
+
+    ERROR - Cannot bind rvalue reference of type 'int&&' to an lvalue of type 'int'
+
+
+
+-----------------------
+- Example - Move Class:
+-----------------------
+
+    class Move {
+    private:
+        int* data;                  // raw pointer
+
+    public:
+        Move(int d);                // Constructor
+        Move(const Move& source);   // Copy Constructor
+        ~Move();                    // Destructor
+
+        void setDataValue(int d) {
+            *data = d;
+        }
+        int getDataValue() {
+            return *data;
+        }
+    };
+
+    Move::Move(const Move& source) {
+        data = new data;
+        *data = *source.data;
+    }
+
+
+- Inefficient Copying
+
+    std::vector<Move> vec;
+
+    vec.push_back(Move{10});
+    vec.push_back(Move{20});
+
+    - Copy constructor will be called to copy the temps
+
+
+- What does it do?
+    - Instead of making a deep copy of the move constructor
+        - 'moves' the resource
+        - Simply copies the address of the resource from source to the current object
+        - And, nulls out the pointer in the source pointer
+
+    - Very efficient
+
+
+
+----------------------------
+- Syntax - r-value reference
+----------------------------
+
+    Type::Type(Type&& source);
+    Player::Player(Player&& source);
+    Move::Move(Move&& source);
+
+
+
+-------------------------------------------
+- Example - Move Class w/ Move Constructor:
+-------------------------------------------
+
+    class Move {
+    private:
+        int* data;                  // raw pointer
+
+    public:
+        Move(int d);                // Constructor
+        Move(const Move& source);   // Copy Constructor
+        Move(Move&& source);        // Move Constructor
+        ~Move();                    // Destructor
+
+        void setDataValue(int d) {
+            *data = d;
+        }
+        int getDataValue() {
+            return *data;
+        }
+    };
+
+    Move::Move(const Move& source) {
+        data = new data;
+        *data = *source.data;
+    }
+
+    Move::Move(Move&& source) : data{source.data} {
+        source.data = nullptr;
+    }
+
+    - 'Steal' the data and null out the source pointer
+
+
+- Efficient
+
+    std::vector<Move> vec;
+
+    vec.push_back(Move{10});
+    vec.push_back(Move{20});
+
+    - Move Constructors will be called for the temp r-values
+
