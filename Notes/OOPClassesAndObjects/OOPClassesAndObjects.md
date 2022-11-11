@@ -1,4 +1,4 @@
-# [OOP - Classes and Objects Notes](#)
+# [OOP - Classes and Objects Notes](https://github.com/rossliam2212/CPPNotes/blob/master/Notes/OOPClassesAndObjects/OOPClassesAndObjectsNotes)
 
 ## Copy Constructor
 
@@ -7,7 +7,7 @@
     - passing object by value as a parameter
     - returning an object from a function by value
     - constructing one object based on another of the same class
-- C++ must have a way of accomplishing this so it provides a compiler-defined copy constructor if you don't
+- C++ must have a way of accomplishing this, so it provides a compiler-defined copy constructor if you don't
 
 ### Pass object by-value:
 ```c++
@@ -50,7 +50,7 @@ Player anotherHero{hero}; // A COPY of hero is made
 
 - Beware if you have a pointer data member
     - Pointer will be copied
-    - Not what is is pointing to
+    - Not what is pointing to
     - Shallow vs. Deep Copy
 
 ### Copy Constructor Best Practices:
@@ -218,7 +218,7 @@ semantics of C++
 - Used in move semantics and perfect forwarding
 - Move semantics is all about r-value references
 - Used by move constructor and move assignment operator to efficiently move an object
-  rather then copy it
+  rather than copy it
 - r-value reference operator (&&)
 
 ```c++

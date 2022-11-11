@@ -1,4 +1,4 @@
-# [Inheritance Notes](#)
+# [Inheritance Notes](https://github.com/rossliam2212/CPPNotes/blob/master/Notes/Inheritance/InheritanceNotes.txt)
 
 ## Constructors & Destructors
 
