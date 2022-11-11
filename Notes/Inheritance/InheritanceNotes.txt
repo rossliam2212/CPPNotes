@@ -14,7 +14,7 @@
     - A Derived class inherits from its Base class.
     - The Base part of the Derived MUST be initialized BEFORE the Derived class is initialized.
     - When a Derived object is created:
-        - Base class constructor executes then..
+        - Base class constructor executes then.
         - Derived class constructor executes
 
 
